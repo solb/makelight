@@ -28,5 +28,6 @@ const device_t *devfind(const char *hostname);
  * provide values for one or more of the optional header fields.
  */
 bool sendpayload(int socket, const device_t *dest, size_t len, message_t *partial);
+bool sendall(int socket, size_t numdests, const device_t *const *dests, size_t len, message_t *partial);
 
 #endif

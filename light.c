@@ -53,13 +53,10 @@ int main(int argc, char **argv) {
 }
 
 bool power(size_t count, const device_t *const *dest, bool on) {
-	bool success = true;
 	power_message_t request = {
 		.header.protocol.type = MESSAGE_TYPE_SETPOWER,
 		.level = on ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
 	};
 
-	for(unsigned index = 0; index < count; ++index)
-		success = sendpayload(sock, dest[index], sizeof request, &request.header) && success;
-	return success;
+	return sendall(sock, count, dest, sizeof request, &request.header);
 }
