@@ -12,14 +12,14 @@ const char *const MESSAGE_TYPES[] = {
 };
 const size_t MESSAGE_TYPES_LEN = sizeof MESSAGE_TYPES / sizeof *MESSAGE_TYPES;
 
-static void decode_service(const header_t *header) {
+static void decode_service(const message_t *header) {
 	assert(header->protocol.type == MESSAGE_TYPE_STATESERVICE);
 
 	const service_message_t *message = (const service_message_t *) header;
 	printf("\tService: %u\n\tPort: %u\n", message->service, message->port);
 }
 
-static void decode_power(const header_t *header) {
+static void decode_power(const message_t *header) {
 	assert(header->protocol.type == MESSAGE_TYPE_SETPOWER ||
 		header->protocol.type == MESSAGE_TYPE_STATEPOWER);
 
@@ -27,14 +27,14 @@ static void decode_power(const header_t *header) {
 	printf("\tLevel: %u\n", message->level);
 }
 
-static void (*const DECODER_FUNS[])(const header_t *) = {
+static void (*const DECODER_FUNS[])(const message_t *) = {
 	[MESSAGE_TYPE_STATESERVICE] = decode_service,
 	[MESSAGE_TYPE_SETPOWER] = decode_power,
 	[MESSAGE_TYPE_STATEPOWER] = decode_power,
 };
 static const size_t DECODER_FUNS_LEN = sizeof DECODER_FUNS / sizeof *DECODER_FUNS;
 
-void putmsg(header_t *header) {
+void putmsg(message_t *header) {
 	uint16_t type = header->protocol.type;
 	const char *typename = type < MESSAGE_TYPES_LEN ? MESSAGE_TYPES[type] : NULL;
 	printf("LIFX %s message\n", typename);
@@ -63,7 +63,7 @@ void putmsg(header_t *header) {
 	puts("\tProtocol");
 	printf("\t\tType: %u (%s)\n", type, typename);
 
-	void (*decode_fun)(const header_t *) = type < DECODER_FUNS_LEN ? DECODER_FUNS[type] : NULL;
+	void (*decode_fun)(const message_t *) = type < DECODER_FUNS_LEN ? DECODER_FUNS[type] : NULL;
 	if(decode_fun)
 		decode_fun(header);
 }

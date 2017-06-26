@@ -46,10 +46,10 @@ typedef struct {
 	header_frame_t frame;
 	header_address_t address;
 	header_protocol_t protocol;
-} header_t;
+} message_t;
 
 typedef struct {
-	header_t header;
+	message_t header;
 	uint8_t service;
 	uint32_t port;
 } service_message_t;
@@ -58,10 +58,10 @@ typedef struct {
 #define POWER_LEVEL_ENABLED 65535
 
 typedef struct {
-	header_t header;
+	message_t header;
 	uint16_t level;
 } power_message_t;
 
-void putmsg(header_t *msg);
+void putmsg(message_t *msg);
 
 #endif

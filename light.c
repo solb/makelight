@@ -31,7 +31,7 @@ void discover(int socket, bool enable) {
 		.sin_port = htons(UDP_PORT),
 		.sin_addr = htonl(INADDR_BROADCAST),
 	};
-	header_t mess = {
+	message_t mess = {
 		.frame = {
 			.size = sizeof mess,
 			.tagged = true,
