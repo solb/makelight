@@ -7,6 +7,7 @@
 static int sock;
 
 bool power(size_t count, const device_t *const *dest, bool on);
+bool status(size_t count, const device_t *const *dest);
 
 int main(int argc, char **argv) {
 	if(argc != 2 || (strcmp(argv[1], "on") && strcmp(argv[1], "off"))) {
@@ -47,6 +48,8 @@ int main(int argc, char **argv) {
 		return 5;
 	}
 
+	status(listlen, &list);
+
 	devcleanup();
 	close(sock);
 	return 0;
@@ -59,4 +62,20 @@ bool power(size_t count, const device_t *const *dest, bool on) {
 	};
 
 	return sendall(sock, count, dest, sizeof request, &request.header, NULL);
+}
+
+static bool status_cb(unsigned index, const device_t *const *dest) {
+	state_message_t response = {0};
+	recv(sock, &response, sizeof response, 0);
+	if(response.header.protocol.type != MESSAGE_TYPE_STATE)
+		return false;
+
+	printf("%s: ", dest[index]->hostname);
+	putmsg(&response.header);
+	return true;
+}
+
+bool status(size_t count, const device_t *const *dest) {
+	message_t request = {.protocol.type = MESSAGE_TYPE_GET};
+	return sendall(sock, count, dest, sizeof request, &request, status_cb);
 }
