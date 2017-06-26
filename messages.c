@@ -6,6 +6,9 @@
 const char *const MESSAGE_TYPES[] = {
 	[MESSAGE_TYPE_GETSERVICE] = "GetService",
 	[MESSAGE_TYPE_STATESERVICE] = "StateService",
+	[MESSAGE_TYPE_GETPOWER] = "GetPower",
+	[MESSAGE_TYPE_SETPOWER] = "SetPower",
+	[MESSAGE_TYPE_STATEPOWER] = "StatePower",
 };
 const size_t MESSAGE_TYPES_LEN = sizeof MESSAGE_TYPES / sizeof *MESSAGE_TYPES;
 
@@ -16,8 +19,18 @@ static void decode_service(const header_t *header) {
 	printf("\tService: %u\n\tPort: %u\n", message->service, message->port);
 }
 
+static void decode_power(const header_t *header) {
+	assert(header->protocol.type == MESSAGE_TYPE_SETPOWER ||
+		header->protocol.type == MESSAGE_TYPE_STATEPOWER);
+
+	const power_message_t *message = (const power_message_t *) header;
+	printf("\tLevel: %u\n", message->level);
+}
+
 static void (*const DECODER_FUNS[])(const header_t *) = {
 	[MESSAGE_TYPE_STATESERVICE] = decode_service,
+	[MESSAGE_TYPE_SETPOWER] = decode_power,
+	[MESSAGE_TYPE_STATEPOWER] = decode_power,
 };
 static const size_t DECODER_FUNS_LEN = sizeof DECODER_FUNS / sizeof *DECODER_FUNS;
 

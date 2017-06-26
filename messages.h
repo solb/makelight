@@ -35,6 +35,9 @@ typedef struct {
 
 #define MESSAGE_TYPE_GETSERVICE    2
 #define MESSAGE_TYPE_STATESERVICE  3
+#define MESSAGE_TYPE_GETPOWER     20
+#define MESSAGE_TYPE_SETPOWER     21
+#define MESSAGE_TYPE_STATEPOWER   22
 
 extern const char *const MESSAGE_TYPES[];
 const size_t MESSAGE_TYPES_LEN;
@@ -50,6 +53,14 @@ typedef struct {
 	uint8_t service;
 	uint32_t port;
 } service_message_t;
+
+#define POWER_LEVEL_STANDBY 0
+#define POWER_LEVEL_ENABLED 65535
+
+typedef struct {
+	header_t header;
+	uint16_t level;
+} power_message_t;
 
 void putmsg(header_t *msg);
 

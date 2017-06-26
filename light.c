@@ -6,20 +6,26 @@
 #include <stdio.h>
 #include <string.h>
 
-void discover(int socket);
+void discover(int socket, bool enable);
 
-int main(void) {
+int main(int argc, char **argv) {
+	if(argc != 2 || (strcmp(argv[1], "on") && strcmp(argv[1], "off"))) {
+		printf("USAGE: %s <on | off>\n", argv[0]);
+		return 1;
+	}
+	bool enable = !strcmp(argv[1], "on");
+
 	int sock = bind_udp_bcast(UDP_PORT);
 	if(sock < 0)
 		return 2;
 
-	discover(sock);
+	discover(sock, enable);
 
 	close(sock);
 	return 0;
 }
 
-void discover(int socket) {
+void discover(int socket, bool enable) {
 	struct sockaddr_in bcast = {
 		.sin_family = AF_INET,
 		.sin_port = htons(UDP_PORT),
@@ -58,6 +64,31 @@ void discover(int socket) {
 			if(dot)
 				*dot = '\0';
 			printf("Network name: %s\n", hostname);
+
+			power_message_t demand = {
+				.header = {
+					.frame = {
+						.size = sizeof demand,
+						.addressable = true,
+						.protocol = MESSAGE_PROTOCOL,
+					},
+					.address = {
+						.mac = {
+							resp.header.address.mac[0],
+							resp.header.address.mac[1],
+							resp.header.address.mac[2],
+							resp.header.address.mac[3],
+							resp.header.address.mac[4],
+							resp.header.address.mac[5],
+						}
+					},
+					.protocol = {
+						.type = MESSAGE_TYPE_SETPOWER,
+					}
+				},
+				.level = enable ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
+			};
+			sendto(socket, &demand, sizeof demand, 0, (struct sockaddr *) &addr, sizeof addr);
 		}
 	} while(success);
 }
