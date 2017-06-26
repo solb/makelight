@@ -1,94 +1,65 @@
 #include "comms.h"
-#include "messages.h"
+#include "devices.h"
 
-#include <arpa/inet.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 
-void discover(int socket, bool enable);
+static int sock;
+
+bool power(size_t count, const device_t *const *dest, bool on);
 
 int main(int argc, char **argv) {
 	if(argc != 2 || (strcmp(argv[1], "on") && strcmp(argv[1], "off"))) {
 		printf("USAGE: %s <on | off>\n", argv[0]);
 		return 1;
 	}
-	bool enable = !strcmp(argv[1], "on");
+	const char *verb = argv[1];
+	bool enable = !strcmp(verb, "on");
 
-	int sock = bind_udp_bcast(UDP_PORT);
+	sock = bind_udp_bcast(UDP_PORT);
 	if(sock < 0)
 		return 2;
 
-	discover(sock, enable);
+	if(!devdiscover(sock)) {
+		fputs("FAILURE during device discovery!\n", stderr);
+		close(sock);
+		return 3;
+	}
 
+	const device_t *list = NULL;
+	size_t listlen = devlist(&list);
+	if(!listlen) {
+		fputs("FAILURE to find any devices!\n", stderr);
+		devcleanup();
+		close(sock);
+		return 4;
+	}
+
+	puts("Found the following lights:");
+	for(unsigned index = 0; index < listlen; ++index)
+		printf("\t%s\n", list[index].hostname);
+
+	printf("Turning all lights %s...\n", verb);
+	if(!power(listlen, &list, enable)) {
+		fputs("FAILURE to perform the requested operation!\n", stderr);
+		devcleanup();
+		close(sock);
+		return 5;
+	}
+
+	devcleanup();
 	close(sock);
 	return 0;
 }
 
-void discover(int socket, bool enable) {
-	struct sockaddr_in bcast = {
-		.sin_family = AF_INET,
-		.sin_port = htons(UDP_PORT),
-		.sin_addr = htonl(INADDR_BROADCAST),
+bool power(size_t count, const device_t *const *dest, bool on) {
+	bool success = true;
+	power_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETPOWER,
+		.level = on ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
 	};
-	message_t mess = {
-		.frame = {
-			.size = sizeof mess,
-			.tagged = true,
-			.addressable = true,
-			.protocol = MESSAGE_PROTOCOL,
-		},
-		.protocol = {
-			.type = MESSAGE_TYPE_GETSERVICE,
-		},
-	};
-	sendto(socket, &mess, sizeof mess, 0, (struct sockaddr *) &bcast, sizeof bcast);
 
-	service_message_t resp = {0};
-	struct sockaddr_in addr = {0};
-	socklen_t addrlen;
-	bool success;
-	do {
-		addrlen = sizeof addr;
-		success = recvfrom(socket, &resp, sizeof resp, 0, (struct sockaddr *) &addr, &addrlen) != -1;
-
-		if(success && resp.header.protocol.type == MESSAGE_TYPE_STATESERVICE) {
-			putmsg(&resp.header);
-
-			const char *ip = inet_ntoa(addr.sin_addr);
-			printf("Network address: %s\n", ip);
-
-			char hostname[128];
-			getnameinfo((struct sockaddr *) &addr, addrlen, hostname, sizeof hostname, NULL, 0, 0);
-			char *dot = strchr(hostname, '.');
-			if(dot)
-				*dot = '\0';
-			printf("Network name: %s\n", hostname);
-
-			power_message_t demand = {
-				.header = {
-					.frame = {
-						.size = sizeof demand,
-						.addressable = true,
-						.protocol = MESSAGE_PROTOCOL,
-					},
-					.address = {
-						.mac = {
-							resp.header.address.mac[0],
-							resp.header.address.mac[1],
-							resp.header.address.mac[2],
-							resp.header.address.mac[3],
-							resp.header.address.mac[4],
-							resp.header.address.mac[5],
-						}
-					},
-					.protocol = {
-						.type = MESSAGE_TYPE_SETPOWER,
-					}
-				},
-				.level = enable ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
-			};
-			sendto(socket, &demand, sizeof demand, 0, (struct sockaddr *) &addr, sizeof addr);
-		}
-	} while(success);
+	for(unsigned index = 0; index < count; ++index)
+		success = sendpayload(sock, dest[index], sizeof request, &request.header) && success;
+	return success;
 }
