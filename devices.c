@@ -54,6 +54,7 @@ bool devdiscover(int socket) {
 		return false;
 	}
 
+	char (*hostnames)[MAX_HOSTLEN] = malloc(MAX_DEVICES * MAX_HOSTLEN);
 	service_message_t resp = {0};
 	struct sockaddr_in addr = {0};
 	socklen_t addrlen;
@@ -73,6 +74,7 @@ bool devdiscover(int socket) {
 			int code;
 			if((code = getnameinfo((struct sockaddr *) &addr, addrlen, hostname, sizeof hostname, NULL, 0, 0))) {
 				fprintf(stderr, "%s: %s\n", "Querying DNS", gai_strerror(code));
+				free(hostnames);
 				return false;
 			}
 			char *dot = strchr(hostname, '.');
@@ -87,7 +89,8 @@ bool devdiscover(int socket) {
 			strncpy(devs[numdevs].hostname, hostname, sizeof devs->hostname - 1);
 			memcpy(&devs[numdevs].ip, &addr, addrlen);
 			memcpy(devs[numdevs].mac, resp.header.address.mac, sizeof devs->mac);
-			hsearch_r((ENTRY) {hostname, NULL}, ENTER, &ign, &devlookup);
+			strncpy((char *) (hostnames + numdevs), hostname, sizeof *hostnames - 1);
+			hsearch_r((ENTRY) {hostnames[numdevs], NULL}, ENTER, &ign, &devlookup);
 			++numdevs;
 		}
 	} while(found && numdevs < MAX_DEVICES);
@@ -98,8 +101,10 @@ bool devdiscover(int socket) {
 		hsearch_r((ENTRY) {devs[index].hostname, NULL}, FIND, &crossref, &devlookup);
 		assert(crossref);
 
+		crossref->key = devs[index].hostname;
 		crossref->data = devs + index;
 	}
+	free(hostnames);
 
 	return true;
 }
