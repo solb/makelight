@@ -58,5 +58,5 @@ bool power(size_t count, const device_t *const *dest, bool on) {
 		.level = on ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
 	};
 
-	return sendall(sock, count, dest, sizeof request, &request.header);
+	return sendall(sock, count, dest, sizeof request, &request.header, NULL);
 }
