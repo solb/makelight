@@ -38,6 +38,9 @@ typedef struct {
 #define MESSAGE_TYPE_GETPOWER     20
 #define MESSAGE_TYPE_SETPOWER     21
 #define MESSAGE_TYPE_STATEPOWER   22
+#define MESSAGE_TYPE_GET         101
+#define MESSAGE_TYPE_SETCOLOR    102
+#define MESSAGE_TYPE_STATE       107
 
 extern const char *const MESSAGE_TYPES[];
 const size_t MESSAGE_TYPES_LEN;
@@ -61,6 +64,29 @@ typedef struct {
 	message_t header;
 	uint16_t level;
 } power_message_t;
+
+typedef struct {
+	uint16_t hue;
+	uint16_t saturation;
+	uint16_t brightness;
+	uint16_t kelvin;
+} hsbk_color_t;
+
+typedef struct {
+	message_t header;
+	uint8_t : 8;
+	hsbk_color_t color;
+	uint32_t duration;
+} color_message_t;
+
+typedef struct {
+	message_t header;
+	hsbk_color_t color;
+	uint16_t : 16;
+	uint16_t power;
+	char label[32];
+	uint64_t : 64;
+} state_message_t;
 
 void putmsg(message_t *msg);
 
