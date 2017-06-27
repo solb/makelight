@@ -21,6 +21,12 @@ typedef struct {
 bool devdiscover(int socket);
 void devcleanup(void);
 
+/* Client code may choose to make a single copy of each of the device_t instances returned by these
+ * functions, and may even pass the resulting copies into this module's other functions, provided
+ * it makes no attempt to change them.  This module will keep its internal copies and any other copy
+ * that is provided to one of its mutating copies up to date with current state information.
+ */
+
 /* If a is NULL, only the cardinality will be returned. */
 size_t devlist(const device_t **a);
 const device_t *devfind(const char *hostname);
