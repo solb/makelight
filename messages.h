@@ -52,7 +52,7 @@ typedef struct {
 	header_protocol_t protocol;
 } message_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	message_t header;
 	uint8_t service;
 	uint32_t port;
