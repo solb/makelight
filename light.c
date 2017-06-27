@@ -6,8 +6,8 @@
 
 static int sock;
 
-static bool power(size_t count, const device_t *const *dest, bool on);
-static bool status(size_t count, const device_t *const *dest);
+static bool power(size_t count, const device_t *dests, bool on);
+static bool status(size_t count, const device_t *dests);
 
 int main(int argc, char **argv) {
 	if(argc != 2 || (strcmp(argv[1], "on") && strcmp(argv[1], "off"))) {
@@ -55,27 +55,27 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-static bool power(size_t count, const device_t *const *dest, bool on) {
+static bool power(size_t count, const device_t *dests, bool on) {
 	power_message_t request = {
 		.header.protocol.type = MESSAGE_TYPE_SETPOWER,
 		.level = on ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
 	};
 
-	return sendall(sock, count, dest, sizeof request, &request.header, NULL);
+	return sendall(sock, count, dests, sizeof request, &request.header, NULL);
 }
 
-static bool status_cb(unsigned index, const device_t *const *dest) {
+static bool status_cb(unsigned index, const device_t *dests) {
 	state_message_t response = {0};
 	recv(sock, &response, sizeof response, 0);
 	if(response.header.protocol.type != MESSAGE_TYPE_STATE)
 		return false;
 
-	printf("%s: ", dest[index]->hostname);
+	printf("%s: ", dests[index].hostname);
 	putmsg(&response.header);
 	return true;
 }
 
-static bool status(size_t count, const device_t *const *dest) {
+static bool status(size_t count, const device_t *dests) {
 	message_t request = {.protocol.type = MESSAGE_TYPE_GET};
-	return sendall(sock, count, dest, sizeof request, &request, status_cb);
+	return sendall(sock, count, dests, sizeof request, &request, status_cb);
 }
