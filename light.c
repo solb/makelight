@@ -7,7 +7,6 @@
 static int sock;
 
 static bool power(size_t count, const device_t *dests, bool on);
-static bool status(size_t count, const device_t *dests);
 
 int main(int argc, char **argv) {
 	if(argc != 2 || (strcmp(argv[1], "on") && strcmp(argv[1], "off"))) {
@@ -41,14 +40,12 @@ int main(int argc, char **argv) {
 		printf("\t%s\n", list[index].hostname);
 
 	printf("Turning all lights %s...\n", verb);
-	if(!power(listlen, &list, enable)) {
+	if(!power(listlen, list, enable)) {
 		fputs("FAILURE to perform the requested operation!\n", stderr);
 		devcleanup();
 		close(sock);
 		return 5;
 	}
-
-	status(listlen, &list);
 
 	devcleanup();
 	close(sock);
@@ -62,20 +59,4 @@ static bool power(size_t count, const device_t *dests, bool on) {
 	};
 
 	return sendall(sock, count, dests, sizeof request, &request.header, NULL);
-}
-
-static bool status_cb(unsigned index, const device_t *dests) {
-	state_message_t response = {0};
-	recv(sock, &response, sizeof response, 0);
-	if(response.header.protocol.type != MESSAGE_TYPE_STATE)
-		return false;
-
-	printf("%s: ", dests[index].hostname);
-	putmsg(&response.header);
-	return true;
-}
-
-static bool status(size_t count, const device_t *dests) {
-	message_t request = {.protocol.type = MESSAGE_TYPE_GET};
-	return sendall(sock, count, dests, sizeof request, &request, status_cb);
 }
