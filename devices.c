@@ -155,3 +155,19 @@ bool sendall(int socket, size_t numdests, const device_t *const *dests, ssize_t 
 	}
 	return success;
 }
+
+bool expect(int socket, ssize_t len, message_t *buf, uint16_t type) {
+	struct sockaddr_in ign = {0};
+	return expectwhence(socket, len, buf, type, &ign);
+}
+
+bool expectwhence(int socket, ssize_t len, message_t *buf, uint16_t type, struct sockaddr_in *src) {
+	ssize_t got;
+	do {
+		socklen_t srclen = sizeof *src;
+		got = recvfrom(socket, buf, len, 0, (struct sockaddr *) src, &srclen);
+	} while(got >= (intptr_t) &buf->protocol.type - (intptr_t) buf + (intptr_t) sizeof buf->protocol.type &&
+		buf->protocol.type != type);
+
+	return buf->protocol.type == type && got == len;
+}
