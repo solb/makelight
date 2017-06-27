@@ -10,3 +10,11 @@ devices.o: CPPFLAGS += -D_GNU_SOURCE
 devices.o: devices.h messages.h
 comms.o: comms.h
 messages.o: messages.h
+
+.PHONY: clean
+clean:
+	$(RM) *.o
+
+.PHONY: distclean
+distclean: clean
+	$(RM) light
