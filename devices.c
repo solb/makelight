@@ -169,6 +169,8 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 
 bool sendall(int socket, size_t numdests, const device_t *dests, ssize_t len, message_t *partial, send_callback_t cb) {
 	bool success = true;
+	if(!dests)
+		numdests = devlist(&dests);
 
 	for(unsigned index = 0; index < numdests; ++index) {
 		success = sendpayload(socket, dests + index, len, partial) && success;

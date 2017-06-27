@@ -33,6 +33,7 @@ typedef bool (*send_callback_t)(unsigned index, const device_t *dest);
  * provide values for one or more of the optional header fields.
  */
 bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial);
+/* A dests of NULL means all devices. */
 bool sendall(int socket, size_t numdests, const device_t *dests, ssize_t len, message_t *partial, send_callback_t cb);
 
 /* Discards pending messages until it either receives one of the expected type or times out in the
