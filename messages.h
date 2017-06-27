@@ -36,9 +36,9 @@ typedef struct {
 
 #define MESSAGE_TYPE_GETSERVICE    2
 #define MESSAGE_TYPE_STATESERVICE  3
-#define MESSAGE_TYPE_GETPOWER     20
-#define MESSAGE_TYPE_SETPOWER     21
-#define MESSAGE_TYPE_STATEPOWER   22
+#define MESSAGE_TYPE_GETPOWER    116
+#define MESSAGE_TYPE_SETPOWER    117
+#define MESSAGE_TYPE_STATEPOWER  118
 #define MESSAGE_TYPE_GET         101
 #define MESSAGE_TYPE_SETCOLOR    102
 #define MESSAGE_TYPE_STATE       107
@@ -61,10 +61,16 @@ typedef struct {
 #define POWER_LEVEL_STANDBY 0
 #define POWER_LEVEL_ENABLED 65535
 
+typedef struct __attribute__((packed)) {
+	message_t header;
+	uint16_t level;
+	uint32_t duration;
+} power_message_t;
+
 typedef struct {
 	message_t header;
 	uint16_t level;
-} power_message_t;
+} level_message_t;
 
 typedef struct {
 	uint16_t hue;

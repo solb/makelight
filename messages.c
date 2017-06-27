@@ -23,10 +23,16 @@ static void decode_service(const message_t *header) {
 }
 
 static void decode_power(const message_t *header) {
-	assert(header->protocol.type == MESSAGE_TYPE_SETPOWER ||
-		header->protocol.type == MESSAGE_TYPE_STATEPOWER);
+	assert(header->protocol.type == MESSAGE_TYPE_SETPOWER);
 
 	const power_message_t *message = (const power_message_t *) header;
+	printf("\tLevel: %u\n\tDuration: %u\n", message->level, message->duration);
+}
+
+static void decode_level(const message_t *header) {
+	assert(header->protocol.type == MESSAGE_TYPE_STATEPOWER);
+
+	const level_message_t *message = (const level_message_t *) header;
 	printf("\tLevel: %u\n", message->level);
 }
 
@@ -58,7 +64,7 @@ static void decode_state(const message_t *header) {
 static void (*const DECODER_FUNS[])(const message_t *) = {
 	[MESSAGE_TYPE_STATESERVICE] = decode_service,
 	[MESSAGE_TYPE_SETPOWER] = decode_power,
-	[MESSAGE_TYPE_STATEPOWER] = decode_power,
+	[MESSAGE_TYPE_STATEPOWER] = decode_level,
 	[MESSAGE_TYPE_SETCOLOR] = decode_color,
 	[MESSAGE_TYPE_STATE] = decode_state,
 };
