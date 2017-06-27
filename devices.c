@@ -129,7 +129,7 @@ const device_t *devfind(const char *hostname) {
 	return res ? res->data : NULL;
 }
 
-bool sendpayload(int socket, const device_t *dest, size_t len, message_t *partial) {
+bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial) {
 	if(!partial->protocol.type)
 		return false;
 
@@ -138,14 +138,14 @@ bool sendpayload(int socket, const device_t *dest, size_t len, message_t *partia
 	partial->frame.protocol = MESSAGE_PROTOCOL;
 	memcpy(partial->address.mac, dest->mac, sizeof partial->address.mac);
 
-	if(sendto(socket, partial, len, 0, (const struct sockaddr *) &dest->ip, sizeof dest->ip)) {
+	if(sendto(socket, partial, len, 0, (const struct sockaddr *) &dest->ip, sizeof dest->ip) < len) {
 		perror("Sending request");
 		return false;
 	}
 	return true;
 }
 
-bool sendall(int socket, size_t numdests, const device_t *const *dests, size_t len, message_t *partial, send_callback_t cb) {
+bool sendall(int socket, size_t numdests, const device_t *const *dests, ssize_t len, message_t *partial, send_callback_t cb) {
 	bool success = true;
 
 	for(unsigned index = 0; index < numdests; ++index) {

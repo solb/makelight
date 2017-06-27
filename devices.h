@@ -29,7 +29,7 @@ typedef bool (*send_callback_t)(unsigned index, const device_t *const *dest);
  * protocol.type field, and provide any applicable payload fields; however, it may also choose to
  * provide values for one or more of the optional header fields.
  */
-bool sendpayload(int socket, const device_t *dest, size_t len, message_t *partial);
-bool sendall(int socket, size_t numdests, const device_t *const *dests, size_t len, message_t *partial, send_callback_t cb);
+bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial);
+bool sendall(int socket, size_t numdests, const device_t *const *dests, ssize_t len, message_t *partial, send_callback_t cb);
 
 #endif
