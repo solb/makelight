@@ -6,8 +6,8 @@
 
 static int sock;
 
-bool power(size_t count, const device_t *const *dest, bool on);
-bool status(size_t count, const device_t *const *dest);
+static bool power(size_t count, const device_t *const *dest, bool on);
+static bool status(size_t count, const device_t *const *dest);
 
 int main(int argc, char **argv) {
 	if(argc != 2 || (strcmp(argv[1], "on") && strcmp(argv[1], "off"))) {
@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-bool power(size_t count, const device_t *const *dest, bool on) {
+static bool power(size_t count, const device_t *const *dest, bool on) {
 	power_message_t request = {
 		.header.protocol.type = MESSAGE_TYPE_SETPOWER,
 		.level = on ? POWER_LEVEL_ENABLED : POWER_LEVEL_STANDBY,
@@ -75,7 +75,7 @@ static bool status_cb(unsigned index, const device_t *const *dest) {
 	return true;
 }
 
-bool status(size_t count, const device_t *const *dest) {
+static bool status(size_t count, const device_t *const *dest) {
 	message_t request = {.protocol.type = MESSAGE_TYPE_GET};
 	return sendall(sock, count, dest, sizeof request, &request, status_cb);
 }
