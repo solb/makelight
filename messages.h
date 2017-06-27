@@ -20,7 +20,8 @@ typedef struct {
 
 typedef struct {
 	uint8_t mac[6];
-	uint8_t reserved[6];
+	uint16_t : 16;
+	uint64_t : 48;
 	bool res_required : 1;
 	bool ack_required : 1;
 	uint8_t : 6;
@@ -29,8 +30,8 @@ typedef struct {
 
 typedef struct {
 	uint64_t : 64;
-	uint16_t : 16;
 	uint16_t type;
+	uint16_t : 16;
 } header_protocol_t;
 
 #define MESSAGE_TYPE_GETSERVICE    2
