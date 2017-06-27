@@ -14,6 +14,8 @@ typedef struct {
 	const char hostname[MAX_HOSTLEN];
 	const struct sockaddr_in ip;
 	const uint8_t mac[6];
+	const hsbk_color_t color;
+	uint16_t power;
 } device_t;
 
 bool devdiscover(int socket);

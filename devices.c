@@ -12,6 +12,8 @@ struct internal_device {
 	char hostname[MAX_HOSTLEN];
 	struct sockaddr_in ip;
 	uint8_t mac[8];
+	hsbk_color_t color;
+	uint16_t power;
 };
 
 static int devcmp(const struct internal_device *left, const struct internal_device *right) {
@@ -23,10 +25,8 @@ static struct internal_device devs[MAX_DEVICES] = {0};
 static size_t numdevs = 0;
 
 bool devdiscover(int socket) {
-	static bool idempotency = false;
-	if(idempotency)
+	if(numdevs)
 		return true;
-	idempotency = true;
 
 	struct sockaddr_in bcast = {
 		.sin_family = AF_INET,
@@ -55,41 +55,38 @@ bool devdiscover(int socket) {
 	}
 
 	char (*hostnames)[MAX_HOSTLEN] = malloc(MAX_DEVICES * MAX_HOSTLEN);
-	service_message_t resp = {0};
-	struct sockaddr_in addr = {0};
-	socklen_t addrlen;
 	bool found;
 	do {
-		addrlen = sizeof addr;
-		if((found = recvfrom(socket, &resp, sizeof resp, 0, (struct sockaddr *) &addr, &addrlen) != -1)) {
-			if(resp.header.protocol.type != MESSAGE_TYPE_STATESERVICE)
-				continue;
-
-			putmsg(&resp.header);
-
-			const char *ip = inet_ntoa(addr.sin_addr);
-			printf("Network address: %s\n", ip);
-
-			char hostname[128];
+		service_message_t resp = {0};
+		struct sockaddr_in addr = {0};
+		if((found = expectwhence(socket, sizeof resp, &resp.header, MESSAGE_TYPE_STATESERVICE, &addr))) {
+			char hostname[MAX_HOSTLEN];
 			int code;
-			if((code = getnameinfo((struct sockaddr *) &addr, addrlen, hostname, sizeof hostname, NULL, 0, 0))) {
+			if((code = getnameinfo((struct sockaddr *) &addr, sizeof addr, hostname, sizeof hostname, NULL, 0, 0))) {
 				fprintf(stderr, "%s: %s\n", "Querying DNS", gai_strerror(code));
+				devcleanup();
 				free(hostnames);
 				return false;
 			}
 			char *dot = strchr(hostname, '.');
 			if(dot)
 				*dot = '\0';
-			printf("Network name: %s\n", hostname);
 
 			ENTRY *ign = NULL;
 			if(hsearch_r((ENTRY) {hostname, NULL}, FIND, &ign, &devlookup))
 				continue;
 
+#ifdef VERBOSE
+			const char *ip = inet_ntoa(addr.sin_addr);
+			printf("%s (%s): ", hostname, ip);
+			putmsg(&resp.header);
+#endif
+
 			strncpy(devs[numdevs].hostname, hostname, sizeof devs->hostname - 1);
-			memcpy(&devs[numdevs].ip, &addr, addrlen);
+			memcpy(&devs[numdevs].ip, &addr, sizeof devs[numdevs].ip);
 			memcpy(devs[numdevs].mac, resp.header.address.mac, sizeof devs->mac);
 			strncpy((char *) (hostnames + numdevs), hostname, sizeof *hostnames - 1);
+
 			hsearch_r((ENTRY) {hostnames[numdevs], NULL}, ENTER, &ign, &devlookup);
 			++numdevs;
 		}
@@ -103,6 +100,30 @@ bool devdiscover(int socket) {
 
 		crossref->key = devs[index].hostname;
 		crossref->data = devs + index;
+
+		message_t query = {.protocol.type = MESSAGE_TYPE_GET};
+		if(!sendpayload(socket, (const device_t *) (devs + index), sizeof query, &query)) {
+			perror("Querying state");
+			devcleanup();
+			free(hostnames);
+			return false;
+		}
+
+		state_message_t status = {0};
+		if(!expect(socket, sizeof status, &status.header, MESSAGE_TYPE_STATE)) {
+			perror("Receiving status");
+			devcleanup();
+			free(hostnames);
+			return false;
+		}
+
+#ifdef VERBOSE
+		printf("%s: ", devs[index].hostname);
+		putmsg(&status.header);
+#endif
+
+		memcpy(&devs[index].color, &status.color, sizeof devs[index].color);
+		devs[index].power = status.power;
 	}
 	free(hostnames);
 
