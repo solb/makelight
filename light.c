@@ -82,6 +82,7 @@ static void shell(void) {
 		else if(!strlen(line))
 			line = lastline;
 
+		success = false;
 		ENTRY *rule = hsearch((ENTRY) {line, NULL}, FIND);
 		if(rule) {
 			bool (*fun)(void) = (bool (*)(void)) (uintptr_t) rule->data;
