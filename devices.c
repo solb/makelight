@@ -137,7 +137,8 @@ void devcleanup(void) {
 }
 
 size_t devlist(const device_t **a) {
-	*a = (device_t *) devs;
+	if(a)
+		*a = (device_t *) devs;
 	return numdevs;
 }
 

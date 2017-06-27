@@ -21,6 +21,7 @@ typedef struct {
 bool devdiscover(int socket);
 void devcleanup(void);
 
+/* If a is NULL, only the cardinality will be returned. */
 size_t devlist(const device_t **a);
 const device_t *devfind(const char *hostname);
 
