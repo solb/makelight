@@ -73,7 +73,7 @@ typedef struct {
 	uint16_t kelvin;
 } hsbk_color_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	message_t header;
 	uint8_t : 8;
 	hsbk_color_t color;
