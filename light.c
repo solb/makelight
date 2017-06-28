@@ -19,6 +19,7 @@ static bool on(const char *arg);
 static bool off(const char *arg);
 static bool hue(const char *arg);
 static bool saturation(const char *arg);
+static bool brightness(const char *arg);
 static bool kelvin(const char *arg);
 
 static const char COMMAND_QUIT[] = "quit";
@@ -31,6 +32,7 @@ static struct {
 	{"off", off},
 	{"hue", hue},
 	{"saturation", saturation},
+	{"brightness", brightness},
 	{"kelvin", kelvin},
 };
 static size_t NCOMMANDS = sizeof COMMANDS / sizeof *COMMANDS;
@@ -137,6 +139,14 @@ static bool saturation(const char *arg) {
 		.color.saturation = atoi(arg),
 	};
 	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_SAT, NULL);
+}
+
+static bool brightness(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.brightness = atoi(arg),
+	};
+	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_VAL, NULL);
 }
 
 static bool kelvin(const char *arg) {
