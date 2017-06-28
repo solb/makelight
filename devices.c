@@ -11,7 +11,7 @@
 struct internal_device {
 	char hostname[MAX_HOSTLEN];
 	struct sockaddr_in ip;
-	uint8_t mac[8];
+	uint8_t mac[6];
 	hsbk_color_t color;
 	uint16_t power;
 };
