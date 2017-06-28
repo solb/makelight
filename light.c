@@ -8,19 +8,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LONGEST_CMD 5
+#define LONGEST_CMD 10
+#define COMMAND_DELIM ':'
 
 static const char COMMAND_PROMPT[] = "@ ";
 static const char COMMAND_PROMPT_FAILED[] = "! ";
 
-static bool list(void);
-static bool on(void);
-static bool off(void);
+static bool list(const char *arg);
+static bool on(const char *arg);
+static bool off(const char *arg);
 
 static const char COMMAND_QUIT[] = "quit";
 static struct {
 	char keyword[LONGEST_CMD];
-	bool (*const fun)(void);
+	bool (*const fun)(const char *arg);
 } COMMANDS[] = {
 	{"list", list},
 	{"on", on},
@@ -82,14 +83,21 @@ static void shell(void) {
 		else if(!strlen(line))
 			line = lastline;
 
+		char *delim = strchr(line, COMMAND_DELIM);
+		if(delim)
+			*delim = '\0';
+
 		success = false;
 		ENTRY *rule = hsearch((ENTRY) {line, NULL}, FIND);
 		if(rule) {
-			bool (*fun)(void) = (bool (*)(void)) (uintptr_t) rule->data;
+			bool (*fun)(const char *) = (bool (*)(const char *)) (uintptr_t) rule->data;
 			assert(fun);
 
 			lastline = line;
-			success = fun();
+			success = fun(delim ? (delim + 1) : NULL);
+
+			if(delim)
+				*delim = COMMAND_DELIM;
 		}
 	} while(strcmp(line, quit));
 
@@ -99,15 +107,19 @@ static void shell(void) {
 
 static bool power(size_t count, const device_t *dests, bool on);
 
-static bool on(void) {
+static bool on(const char *arg) {
+	(void) arg;
 	return power(0, NULL, true);
 }
 
-static bool off(void) {
+static bool off(const char *arg) {
+	(void) arg;
 	return power(0, NULL, false);
 }
 
-static bool list(void) {
+static bool list(const char *arg) {
+	(void) arg;
+
 	const device_t *lista = NULL;
 	size_t listlen = devlist(&lista);
 
