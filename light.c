@@ -127,8 +127,6 @@ static bool hue(const char *arg) {
 	color_message_t request = {
 		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
 		.color.hue = atoi(arg),
-		.color.saturation = 65535,
-		.color.brightness = 65535,
 	};
 	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_HUE, NULL);
 }
@@ -137,7 +135,6 @@ static bool saturation(const char *arg) {
 	color_message_t request = {
 		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
 		.color.saturation = atoi(arg),
-		.color.brightness = 65535,
 	};
 	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_SAT, NULL);
 }
@@ -146,7 +143,6 @@ static bool kelvin(const char *arg) {
 	color_message_t request = {
 		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
 		.color.kelvin = atoi(arg),
-		.color.brightness = 65535,
 	};
 	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_KEL | DEVICE_CMASK_SAT, NULL);
 }
