@@ -102,7 +102,7 @@ bool devdiscover(int socket) {
 		crossref->data = devs + index;
 
 		message_t query = {.protocol.type = MESSAGE_TYPE_GET};
-		if(!sendpayload(socket, (const device_t *) (devs + index), sizeof query, &query)) {
+		if(!sendpayload(socket, (const device_t *) (devs + index), sizeof query, &query, 0)) {
 			perror("Querying state");
 			devcleanup();
 			free(hostnames);
@@ -151,7 +151,7 @@ const device_t *devfind(const char *hostname) {
 	return res ? res->data : NULL;
 }
 
-bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial) {
+bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial, uint8_t cmask) {
 	if(!partial->protocol.type)
 		return false;
 
@@ -159,6 +159,17 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 	partial->frame.addressable = true;
 	partial->frame.protocol = MESSAGE_PROTOCOL;
 	memcpy(partial->address.mac, dest->mac, sizeof partial->address.mac);
+	if(partial->protocol.type == MESSAGE_TYPE_SETCOLOR) {
+		state_message_t *message = (state_message_t *) partial;
+		if(!(cmask & DEVICE_CMASK_HUE))
+			message->color.hue = dest->color.hue;
+		if(!(cmask & DEVICE_CMASK_SAT))
+			message->color.saturation = dest->color.saturation;
+		if(!(cmask & DEVICE_CMASK_VAL))
+			message->color.brightness = dest->color.brightness;
+		if(!(cmask & DEVICE_CMASK_KEL))
+			message->color.kelvin = dest->color.kelvin;
+	}
 
 	if(sendto(socket, partial, len, 0, (const struct sockaddr *) &dest->ip, sizeof dest->ip) < len) {
 		perror("Sending request");
@@ -190,13 +201,13 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 	return true;
 }
 
-bool sendall(int socket, size_t numdests, const device_t *dests, ssize_t len, message_t *partial, send_callback_t cb) {
+bool sendall(int socket, size_t numdests, const device_t *dests, ssize_t len, message_t *partial, uint8_t cmask, send_callback_t cb) {
 	bool success = true;
 	if(!dests)
 		numdests = devlist(&dests);
 
 	for(unsigned index = 0; index < numdests; ++index) {
-		success = sendpayload(socket, dests + index, len, partial) && success;
+		success = sendpayload(socket, dests + index, len, partial, cmask) && success;
 		if(cb)
 			success = cb(index, dests) && success;
 	}

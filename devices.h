@@ -31,6 +31,11 @@ void devcleanup(void);
 size_t devlist(const device_t **a);
 const device_t *devfind(const char *hostname);
 
+#define DEVICE_CMASK_HUE 0x1
+#define DEVICE_CMASK_SAT 0x2
+#define DEVICE_CMASK_VAL 0x4
+#define DEVICE_CMASK_KEL 0x8
+
 typedef bool (*send_callback_t)(unsigned index, const device_t *dest);
 
 /* The partial message will first be modified in-place to add all required header fields, leaving
@@ -38,9 +43,9 @@ typedef bool (*send_callback_t)(unsigned index, const device_t *dest);
  * protocol.type field, and provide any applicable payload fields; however, it may also choose to
  * provide values for one or more of the optional header fields.
  */
-bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial);
+bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *partial, uint8_t cmask);
 /* A dests of NULL means all devices. */
-bool sendall(int socket, size_t numdests, const device_t *dests, ssize_t len, message_t *partial, send_callback_t cb);
+bool sendall(int socket, size_t numdests, const device_t *dests, ssize_t len, message_t *partial, uint8_t cmask, send_callback_t cb);
 
 /* Discards pending messages until it either receives one of the expected type or times out in the
  * attempt.  Note that in the latter case, buf will be populated with (possibly only the beginning
