@@ -18,7 +18,7 @@ typedef struct {
 
 #define MESSAGE_PROTOCOL 1024
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	uint8_t mac[6];
 	uint16_t : 16;
 	uint64_t : 48;
@@ -28,7 +28,7 @@ typedef struct {
 	uint8_t sequence;
 } header_address_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	uint64_t : 64;
 	uint16_t type;
 	uint16_t : 16;
