@@ -160,7 +160,7 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 	partial->frame.protocol = MESSAGE_PROTOCOL;
 	memcpy(partial->address.mac, dest->mac, sizeof partial->address.mac);
 	if(partial->protocol.type == MESSAGE_TYPE_SETCOLOR) {
-		state_message_t *message = (state_message_t *) partial;
+		color_message_t *message = (color_message_t *) partial;
 		if(!(cmask & DEVICE_CMASK_HUE))
 			message->color.hue = dest->color.hue;
 		if(!(cmask & DEVICE_CMASK_SAT))
