@@ -126,9 +126,8 @@ static bool saturation(const char *arg) {
 		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
 		.color.saturation = atoi(arg),
 		.color.brightness = 65535,
-		.color.kelvin = 3500,
 	};
-	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_SAT | DEVICE_CMASK_KEL, NULL);
+	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_SAT, NULL);
 }
 
 static bool kelvin(const char *arg) {
@@ -137,7 +136,7 @@ static bool kelvin(const char *arg) {
 		.color.kelvin = atoi(arg),
 		.color.brightness = 65535,
 	};
-	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_KEL | DEVICE_CMASK_VAL, NULL);
+	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_KEL | DEVICE_CMASK_SAT, NULL);
 }
 
 static bool list(const char *arg) {
