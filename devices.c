@@ -159,7 +159,7 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 	partial->frame.addressable = true;
 	partial->frame.protocol = MESSAGE_PROTOCOL;
 	memcpy(partial->address.mac, dest->mac, sizeof partial->address.mac);
-	if(partial->protocol.type == MESSAGE_TYPE_SETCOLOR) {
+	/*if(partial->protocol.type == MESSAGE_TYPE_SETCOLOR) {
 		state_message_t *message = (state_message_t *) partial;
 		if(!(cmask & DEVICE_CMASK_HUE))
 			message->color.hue = dest->color.hue;
@@ -169,7 +169,8 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 			message->color.brightness = dest->color.brightness;
 		if(!(cmask & DEVICE_CMASK_KEL))
 			message->color.kelvin = dest->color.kelvin;
-	}
+	}*/
+	(void) cmask;
 
 	if(sendto(socket, partial, len, 0, (const struct sockaddr *) &dest->ip, sizeof dest->ip) < len) {
 		perror("Sending request");
