@@ -61,7 +61,7 @@ typedef struct __attribute__((packed)) {
 #define POWER_LEVEL_STANDBY 0
 #define POWER_LEVEL_ENABLED 65535
 
-typedef struct __attribute__((packed)) {
+typedef struct {
 	message_t header;
 	uint16_t level;
 	uint32_t duration;
@@ -72,7 +72,7 @@ typedef struct {
 	uint16_t level;
 } level_message_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
 	uint16_t hue;
 	uint16_t saturation;
 	uint16_t brightness;
