@@ -1,5 +1,5 @@
 CFLAGS   := -std=c99 -g -Og -Werror -Wall -Wextra -Wpedantic -Wno-missing-braces
-CPPFLAGS := -DVERBOSE
+#CPPFLAGS := -DVERBOSE
 
 light: LDLIBS += -lreadline
 light: light.o comms.o devices.o messages.o
