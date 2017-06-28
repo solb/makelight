@@ -17,6 +17,7 @@ static const char COMMAND_PROMPT_FAILED[] = "! ";
 static bool list(const char *arg);
 static bool on(const char *arg);
 static bool off(const char *arg);
+static bool hue(const char *arg);
 static bool saturation(const char *arg);
 static bool kelvin(const char *arg);
 
@@ -28,6 +29,7 @@ static struct {
 	{"list", list},
 	{"on", on},
 	{"off", off},
+	{"hue", hue},
 	{"saturation", saturation},
 	{"kelvin", kelvin},
 };
@@ -119,6 +121,16 @@ static bool on(const char *arg) {
 static bool off(const char *arg) {
 	(void) arg;
 	return power(0, NULL, false);
+}
+
+static bool hue(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.hue = atoi(arg),
+		.color.saturation = 65535,
+		.color.brightness = 65535,
+	};
+	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_HUE, NULL);
 }
 
 static bool saturation(const char *arg) {
