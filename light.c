@@ -17,6 +17,8 @@ static const char COMMAND_PROMPT_FAILED[] = "! ";
 static bool list(const char *arg);
 static bool on(const char *arg);
 static bool off(const char *arg);
+static bool saturation(const char *arg);
+static bool kelvin(const char *arg);
 
 static const char COMMAND_QUIT[] = "quit";
 static struct {
@@ -26,6 +28,8 @@ static struct {
 	{"list", list},
 	{"on", on},
 	{"off", off},
+	{"saturation", saturation},
+	{"kelvin", kelvin},
 };
 static size_t NCOMMANDS = sizeof COMMANDS / sizeof *COMMANDS;
 
@@ -115,6 +119,25 @@ static bool on(const char *arg) {
 static bool off(const char *arg) {
 	(void) arg;
 	return power(0, NULL, false);
+}
+
+static bool saturation(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.saturation = atoi(arg),
+		.color.brightness = 65535,
+		.color.kelvin = 3500,
+	};
+	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_SAT | DEVICE_CMASK_KEL, NULL);
+}
+
+static bool kelvin(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.kelvin = atoi(arg),
+		.color.brightness = 65535,
+	};
+	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_KEL | DEVICE_CMASK_VAL, NULL);
 }
 
 static bool list(const char *arg) {
