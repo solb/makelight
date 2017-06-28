@@ -176,8 +176,8 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 		return false;
 	}
 
-	if(!(partial->protocol.type == MESSAGE_TYPE_STATE ||
-		partial->protocol.type == MESSAGE_TYPE_STATEPOWER))
+	if(!(partial->protocol.type == MESSAGE_TYPE_SETCOLOR ||
+		partial->protocol.type == MESSAGE_TYPE_SETPOWER))
 		return true;
 
 	struct internal_device *external = (struct internal_device *) dest;
@@ -186,12 +186,11 @@ bool sendpayload(int socket, const device_t *dest, ssize_t len, message_t *parti
 	assert(handle);
 	struct internal_device *internal = (struct internal_device *) handle->data;
 
-	if(partial->protocol.type == MESSAGE_TYPE_STATE) {
-		state_message_t *message = (state_message_t *) partial;
+	if(partial->protocol.type == MESSAGE_TYPE_SETCOLOR) {
+		color_message_t *message = (color_message_t *) partial;
 		memcpy(&internal->color, &message->color, sizeof internal->color);
-		internal->power = message->power;
-	} else if(partial->protocol.type == MESSAGE_TYPE_STATEPOWER) {
-		level_message_t *message = (level_message_t *) partial;
+	} else if(partial->protocol.type == MESSAGE_TYPE_SETPOWER) {
+		power_message_t *message = (power_message_t *) partial;
 		internal->power = message->level;
 	}
 
