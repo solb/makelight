@@ -15,6 +15,8 @@ static const char COMMAND_PROMPT[] = "@ ";
 static const char COMMAND_PROMPT_FAILED[] = "! ";
 
 static bool list(const char *arg);
+static bool host(const char *arg);
+static bool all(const char *arg);
 static bool on(const char *arg);
 static bool off(const char *arg);
 static bool hue(const char *arg);
@@ -28,6 +30,8 @@ static struct {
 	bool (*const fun)(const char *arg);
 } COMMANDS[] = {
 	{"list", list},
+	{"host", host},
+	{"all", all},
 	{"on", on},
 	{"off", off},
 	{"hue", hue},
@@ -38,6 +42,8 @@ static struct {
 static size_t NCOMMANDS = sizeof COMMANDS / sizeof *COMMANDS;
 
 static int sock;
+static size_t ndevices;
+static const device_t *devices;
 
 static void shell(void);
 
@@ -59,15 +65,19 @@ int main(int argc, char **argv) {
 		return 3;
 	}
 
-	if(!devlist(NULL)) {
+	const device_t *list = NULL;
+	if(!(ndevices = devlist(&list))) {
 		fputs("FAILURE to find any devices!\n", stderr);
 		devcleanup();
 		close(sock);
 		return 4;
 	}
+	devices = list;
 
 	shell();
 
+	if(devices != list)
+		free((device_t *) devices);
 	devcleanup();
 	close(sock);
 	return 0;
@@ -113,50 +123,6 @@ static void shell(void) {
 	hdestroy();
 }
 
-static bool power(size_t count, const device_t *dests, bool on);
-
-static bool on(const char *arg) {
-	(void) arg;
-	return power(0, NULL, true);
-}
-
-static bool off(const char *arg) {
-	(void) arg;
-	return power(0, NULL, false);
-}
-
-static bool hue(const char *arg) {
-	color_message_t request = {
-		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
-		.color.hue = atoi(arg),
-	};
-	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_HUE, NULL);
-}
-
-static bool saturation(const char *arg) {
-	color_message_t request = {
-		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
-		.color.saturation = atoi(arg),
-	};
-	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_SAT, NULL);
-}
-
-static bool brightness(const char *arg) {
-	color_message_t request = {
-		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
-		.color.brightness = atoi(arg),
-	};
-	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_VAL, NULL);
-}
-
-static bool kelvin(const char *arg) {
-	color_message_t request = {
-		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
-		.color.kelvin = atoi(arg),
-	};
-	return sendall(sock, 0, NULL, sizeof request, &request.header, DEVICE_CMASK_KEL | DEVICE_CMASK_SAT, NULL);
-}
-
 static bool list(const char *arg) {
 	(void) arg;
 
@@ -168,6 +134,85 @@ static bool list(const char *arg) {
 		printf("\t%s\n", lista[index].hostname);
 
 	return true;
+}
+
+static bool host(const char *arg) {
+	const device_t *dev = devfind(arg);
+	if(!dev) {
+		fputs("Couldn't find a device by that name!", stderr);
+		return false;
+	}
+
+	const device_t *list = NULL;
+	devlist(&list);
+	if(devices == list) {
+		devices = NULL;
+		ndevices = 0;
+	}
+
+	device_t *extended = realloc((device_t *) devices, (ndevices + 1) * sizeof *devices);
+	memcpy(extended + ndevices, dev, sizeof *devices);
+	devices = extended;
+	++ndevices;
+
+	return true;
+}
+
+static bool all(const char *arg) {
+	(void) arg;
+
+	const device_t *list = NULL;
+	ndevices = devlist(&list);
+
+	if(devices != list)
+		free((device_t *) devices);
+	devices = list;
+
+	return true;
+}
+
+static bool power(size_t count, const device_t *dests, bool on);
+
+static bool on(const char *arg) {
+	(void) arg;
+	return power(ndevices, devices, true);
+}
+
+static bool off(const char *arg) {
+	(void) arg;
+	return power(ndevices, devices, false);
+}
+
+static bool hue(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.hue = atoi(arg),
+	};
+	return sendall(sock, ndevices, devices, sizeof request, &request.header, DEVICE_CMASK_HUE, NULL);
+}
+
+static bool saturation(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.saturation = atoi(arg),
+	};
+	return sendall(sock, ndevices, devices, sizeof request, &request.header, DEVICE_CMASK_SAT, NULL);
+}
+
+static bool brightness(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.brightness = atoi(arg),
+	};
+	return sendall(sock, ndevices, devices, sizeof request, &request.header, DEVICE_CMASK_VAL, NULL);
+}
+
+static bool kelvin(const char *arg) {
+	color_message_t request = {
+		.header.protocol.type = MESSAGE_TYPE_SETCOLOR,
+		.color.kelvin = atoi(arg),
+	};
+	return sendall(sock, ndevices, devices, sizeof request, &request.header, DEVICE_CMASK_KEL | DEVICE_CMASK_SAT, NULL);
 }
 
 static bool power(size_t count, const device_t *dests, bool on) {
