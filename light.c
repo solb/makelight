@@ -19,6 +19,7 @@ static bool host(const char *arg);
 static bool all(const char *arg);
 static bool on(const char *arg);
 static bool off(const char *arg);
+static bool toggle(const char *arg);
 static bool hue(const char *arg);
 static bool saturation(const char *arg);
 static bool brightness(const char *arg);
@@ -34,6 +35,7 @@ static struct {
 	{"all", all},
 	{"on", on},
 	{"off", off},
+	{"toggle", toggle},
 	{"hue", hue},
 	{"saturation", saturation},
 	{"brightness", brightness},
@@ -181,6 +183,19 @@ static bool on(const char *arg) {
 static bool off(const char *arg) {
 	(void) arg;
 	return power(ndevices, devices, false);
+}
+
+static bool toggle(const char *arg) {
+	(void) arg;
+
+	bool anyon = false;
+	for(unsigned index = 0; index < ndevices; ++index)
+		if(devices[index].power) {
+			anyon = true;
+			break;
+		}
+
+	return power(ndevices, devices, !anyon);
 }
 
 static bool hue(const char *arg) {
