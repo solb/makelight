@@ -11,8 +11,14 @@ feedback() {
 	truncate -s0 "$OUT" "$ERR"
 }
 
+in="cat"
+if [ "$#" -gt 0 ]
+then
+	in="printf %s\\n $@"
+fi
+
 feedback
-while read line
+$in | while read line
 do
 	if printf %s "$line" | grep '\<quit\>' >/dev/null
 	then
