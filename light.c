@@ -1,6 +1,7 @@
 #include "comms.h"
 #include "devices.h"
 
+#include <readline/history.h>
 #include <readline/readline.h>
 #include <assert.h>
 #include <search.h>
@@ -102,6 +103,8 @@ static void shell(void) {
 			line = quit;
 		else if(!strlen(line))
 			line = lastline;
+		else
+			add_history(line);
 
 		char *delim = strchr(line, COMMAND_DELIM);
 		if(delim)
