@@ -1,0 +1,27 @@
+#!/bin/sh
+
+readonly SOCKDIR="/tmp/lightsocket"
+readonly SOCKET="$SOCKDIR/socket"
+readonly OUT="$SOCKDIR/out"
+readonly ERR="$SOCKDIR/err"
+
+feedback() {
+	cat "$ERR" >&2
+	cat "$OUT"
+	truncate -s0 "$OUT" "$ERR"
+}
+
+feedback
+while read line
+do
+	if printf %s "$line" | grep '\<quit\>' >/dev/null
+	then
+		break
+	fi
+
+	printf "%s\n" "$line" >"$SOCKET"
+	feedback
+done
+
+printf %s "@ " >"$OUT"
+true

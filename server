@@ -1,0 +1,18 @@
+#!/bin/sh
+
+readonly SOCKDIR="/tmp/lightsocket"
+readonly SOCKET="$SOCKDIR/socket"
+readonly OUT="$SOCKDIR/out"
+readonly ERR="$SOCKDIR/err"
+
+mkdir -p "$SOCKDIR"
+
+rm -f "$SOCKET"
+mkfifo "$SOCKET"
+chmod g+w "$SOCKET"
+
+truncate -s0 "$OUT" "$ERR"
+chmod g+w "$OUT" "$ERR"
+
+./light <"$SOCKET" >"$OUT" 2>"$ERR" &
+cat >"$SOCKET"
