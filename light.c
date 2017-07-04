@@ -15,6 +15,7 @@
 static const char COMMAND_PROMPT[] = "@ ";
 static const char COMMAND_PROMPT_FAILED[] = "! ";
 
+static bool help(const char *arg);
 static bool list(const char *arg);
 static bool host(const char *arg);
 static bool all(const char *arg);
@@ -31,6 +32,7 @@ static struct {
 	char keyword[LONGEST_CMD];
 	bool (*const fun)(const char *arg);
 } COMMANDS[] = {
+	{"help", help},
 	{"list", list},
 	{"host", host},
 	{"all", all},
@@ -126,6 +128,16 @@ static void shell(void) {
 
 	free(quit);
 	hdestroy();
+}
+
+static bool help(const char *arg) {
+	(void) arg;
+
+	puts("The following commands are supported:");
+	for(unsigned index = 1; index < NCOMMANDS; ++index)
+		printf("\t%s\n", COMMANDS[index].keyword);
+
+	return true;
 }
 
 static bool list(const char *arg) {
