@@ -1,0 +1,26 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:       makelight
+# Default-Start:  5
+# Default-Stop:
+# Required-Start: networking
+# Required-Stop:
+### END INIT INFO
+
+case "$1" in
+	start)
+		sudo -ulight ~light/server ~light/light &
+		;;
+	stop)
+		sudo -ulight killall server
+		;;
+	restart)
+		"$0" stop && "$0" start
+		;;
+	*)
+		echo "Unsupported!" >&2
+		exit 1
+esac
+
+true
