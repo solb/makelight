@@ -52,12 +52,7 @@ static const device_t *devices;
 
 static void shell(void);
 
-int main(int argc, char **argv) {
-	if(argc >= 2 && !strcmp(argv[1], "--help")) {
-		printf("USAGE: %s [command line]...\n", argv[0]);
-		return 1;
-	}
-
+int main(void) {
 	sock = bind_udp_bcast(UDP_PORT);
 	if(sock < 0) {
 		fputs("FAILURE during network initialization!\n", stderr);
