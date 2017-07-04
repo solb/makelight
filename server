@@ -5,6 +5,12 @@ readonly SOCKET="$SOCKDIR/socket"
 readonly OUT="$SOCKDIR/out"
 readonly ERR="$SOCKDIR/err"
 
+cmd="./light"
+if [ "$#" -gt 0 ]
+then
+	cmd="$@"
+fi
+
 mkdir -p "$SOCKDIR"
 
 rm -f "$SOCKET"
@@ -14,5 +20,5 @@ chmod g+w "$SOCKET"
 truncate -s0 "$OUT" "$ERR"
 chmod g+w "$OUT" "$ERR"
 
-./light <"$SOCKET" >"$OUT" 2>"$ERR" &
+"$cmd" <"$SOCKET" >"$OUT" 2>"$ERR" &
 cat >"$SOCKET"
