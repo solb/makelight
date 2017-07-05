@@ -13,7 +13,7 @@ case "$1" in
 		sudo -ulight ~light/server ~light/light &
 		;;
 	stop)
-		sudo -ulight killall server
+		sudo -ulight killall tail
 		;;
 	restart)
 		"$0" stop && "$0" start
