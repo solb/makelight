@@ -21,4 +21,4 @@ truncate -s0 "$OUT" "$ERR"
 chmod g+w "$OUT" "$ERR"
 
 "$cmd" <"$SOCKET" >"$OUT" 2>"$ERR" &
-cat >"$SOCKET"
+tail -f >"$SOCKET"
