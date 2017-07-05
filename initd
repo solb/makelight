@@ -10,6 +10,10 @@
 
 case "$1" in
 	start)
+		while [ "`ip addr show scope global | wc -l`" -eq "0" ]
+		do
+			sleep 5
+		done
 		sudo -ulight ~light/server ~light/light &
 		;;
 	stop)
